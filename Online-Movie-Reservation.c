@@ -61,7 +61,7 @@ void initialize_Seat()
 // }
 
 #define SEATWIDTH 6 //DEFAULT: 6 (FIXED)
-#define SCREENWIDTH 25 //DEFAULT: 25
+#define SCREENWIDTH 70 //DEFAULT: 25
 
 void printSeat()
 {	
@@ -73,7 +73,6 @@ void printSeat()
 	//Center the movie screen.
 	for(i=0;i<MAXSEAT_ROW*SEATWIDTH/2-SCREENWIDTH/2;i++)printf(" ");printf("^");for(i=0;i<SCREENWIDTH-2;i++)printf(" ");printf("^\n");
 	for(i=0;i<MAXSEAT_ROW*SEATWIDTH/2-SCREENWIDTH/2;i++)printf(" ");printf("+");for(i=0;i<SCREENWIDTH-2;i++)printf("-");printf("+\n");
-	for(i=0;i<MAXSEAT_ROW*SEATWIDTH/2-SCREENWIDTH/2;i++)printf(" ");printf("|");for(i=0;i<SCREENWIDTH-2;i++)printf(" ");printf("|\n");
 	for(i=0;i<MAXSEAT_ROW*SEATWIDTH/2-SCREENWIDTH/2;i++)printf(" ");printf("|");for(i=0;i<SCREENWIDTH-2;i++)printf(" ");printf("|\n");
 	for(i=0;i<MAXSEAT_ROW*SEATWIDTH/2-SCREENWIDTH/2;i++)printf(" ");printf("|");for(i=0;i<SCREENWIDTH-2;i++)printf(" ");printf("|\n");
 	for(i=0;i<MAXSEAT_ROW*SEATWIDTH/2-SCREENWIDTH/2;i++)printf(" ");printf("O");for(i=0;i<SCREENWIDTH-2;i++)printf("_");printf("O\n");
