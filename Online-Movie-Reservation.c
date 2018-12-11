@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <pthread.h>
 
+
 static volatile int counter = 0;
 // gcc -Wall -Ipthread -o Online-Movie-Reservation Online-Movie-Reservation.c
 
@@ -30,6 +31,9 @@ static volatile int counter = 0;
 
 int seat[MAXSEAT_ROW][MAXSEAT_COLUMN];
 
+
+pthread_mutex_t lock;
+
 void initialize_Seat()
 {
 	int row = 0;
@@ -42,7 +46,6 @@ void initialize_Seat()
 		}
 	}
 }
-
 void delay(int milli_seconds) 
 { 
     // Stroing start time 
@@ -85,7 +88,7 @@ void printSeat()
 		{
 			printf(" O---O ");
 		}
-		printf("\n");
+		printf("\n\n");
 	}
 }
 typedef struct
@@ -96,7 +99,6 @@ typedef struct
      int time;
      int isComplete;
 } RESERVATION_T;
-
 int countComplete;
 int countInComplete;
 int sumID;
@@ -163,13 +165,14 @@ void generateFile()
 	printf("\nGenerate Reservation seat File \n");
 	for ( int i = 0 ; i < maxData ; i++){
 		reservation[i].userID = rand() % 100;
-		reservation[i].time = rand() % 10;
+		reservation[i].time = rand() % 30;
 		reservation[i].column = rand() % 10; 
 		reservation[i].row = rand() % 10; 
 	}
 	// printf("Before sorting\n");
 	// printFile(reservation,maxData);
 	sortArray(reservation,maxData);
+
 	printf("After sorting\n");
 	printFile(reservation,maxData);
 	printf("Want to save file? (1:yes:other:no) : ");
@@ -188,24 +191,50 @@ void reservationSeat(int id,int row, int column)
 	{
 	seat[row][column] = id;
 	sumID = sumID + id;
-	countComplete = countComplete + 1;		
+	countComplete = countComplete + 1;	
 	}
 	else // Have reservation
 	{
 	countInComplete = countInComplete + 1;
 	}
 }
-
 void *mythread(void *arg)
 {
 	int id,column,row;
-	sscanf(arg,"%d:%d:%d",&id, &row, &column);
+	char text[16];
+	sscanf(arg,"%d:%d:%d:%s",&id, &row, &column,text);
 	reservationSeat(id,row,column);
-	//printf("|%s|", (char*) arg);
+	printf("%s ", text);
 	return NULL;
 }
-
-
+void reservationSeatLock(int id,int row, int column)
+{
+	//printf(".");	
+	delay(rand() % 50);  // RANDOM DELAY 0-100 MS 
+	if (seat[row][column] == 0) // NO RESERVATION YET
+	{
+	pthread_mutex_lock(&lock);
+	seat[row][column] = id;
+	sumID = sumID + id;
+	countComplete = countComplete + 1;	
+	pthread_mutex_unlock(&lock);	
+	}
+	else // Have reservation
+	{
+	pthread_mutex_lock(&lock);
+	countInComplete = countInComplete + 1;
+	pthread_mutex_unlock(&lock);
+	}
+}
+void *mythreadlock(void *arg)
+{
+	int id,column,row;
+	char text[16];
+	sscanf(arg,"%d:%d:%d:%s",&id, &row, &column,text);
+	reservationSeatLock(id,row,column);
+	printf("%s ", text);
+	return NULL;
+}
 // ---------------------------------------------------------------------------
 // >>>>>>>>>>>>>>>>>>>>>>>>>   RUN SIMULATION TEST   <<<<<<<<<<<<<<<<<<<<<<<<<
 // ---------------------------------------------------------------------------
@@ -216,7 +245,6 @@ void runSimulation()
 	printf("---------------------------------------------------------------------------\n");
 	char input[MAXCHAR];
 	char fileName[MAXCHAR];
-
 	clock_t start, end;
 	double cpu_time_used;
 	int userID = 0;
@@ -227,7 +255,6 @@ void runSimulation()
 	int i = 0;
 	int maxReservation = 0 ;
 
-
 	initialize_Seat(); // Reset Seat 
 
 	countComplete = 0;
@@ -235,9 +262,9 @@ void runSimulation()
 
 	FILE *pReadFile = NULL;
 	printf("Enter filename: ");
-	//fgets(input,sizeof(input),stdin);
-	//sscanf(input,"%s",fileName);
-	pReadFile = fopen("simulation3.txt","r");
+	fgets(input,sizeof(input),stdin);
+	sscanf(input,"%s",fileName);
+	pReadFile = fopen(fileName,"r");
 	if (pReadFile == NULL)
 	{
 	    printf("Error reading %s file!\n",fileName);
@@ -262,37 +289,36 @@ void runSimulation()
 		}
 		// SIMULATION START
 		start = clock();  // Start timer 
-		sumID = 1;
-		printf("Loading"); 
+		sumID = 0;
+		printf("Loading . . ."); 
 		for ( i = 0 ; i < maxReservation ; i++ )
 		{
 			reservationSeat(reservation[i].userID,reservation[i].row,reservation[i].column);
 		}
 	    end = clock(); // Stop timer  
 	    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-	    printf("\nSimulation time use:%.5lf Second\n",cpu_time_used);
+	 
 		//printSeat();
 		
-		
-		for (i=0;i<MAXSEAT_ROW;i++)
-		{
-			for (int j=0;j<MAXSEAT_COLUMN;j++)
-			{
-				if (seat[i][j] != 0)
-				{
-					//sumID = sumID + seat[i][j];
-					//printf("%d ",seat[i][j]);
-				}
-			}
-		}
-		printf("\nReservation complete:%d\n",countComplete);
-		printf("Sum-RervationID %d\n",sumID);
-		printf("Cannot Reservation:%d\n",countInComplete);
+		// for (i=0;i<MAXSEAT_ROW;i++)
+		// {
+		// 	for (int j=0;j<MAXSEAT_COLUMN;j++)
+		// 	{
+		// 		if (seat[i][j] != 0)
+		// 		{
+		// 			//sumID = sumID + seat[i][j];
+		// 			//printf("%d ",seat[i][j]);
+		// 		}
+		// 	}
+		// }
+		printf("\n--------------------------- Reservation Result ----------------------------\n");
+		printf("Reservation Accept:%3d. Reservation Reject:%3d\n",countComplete,countInComplete);
+		printf("Time usage: %.5lf Second\n",cpu_time_used);
+		printf("Sum_ID %d\n",sumID);
+		printf("Error %d\n",(maxReservation - countComplete - countInComplete));
 	}
 	fclose(pReadFile);
 }
-
-
 // ---------------------------------------------------------------------------
 // >>>>>>>>>>>>>>>>>>>>>>   runMultiThreadSimulation   <<<<<<<<<<<<<<<<<<<<<<<
 // ---------------------------------------------------------------------------
@@ -305,6 +331,7 @@ void runMultiThreadSimulation()
 	char fileName[MAXCHAR];
 
 	clock_t start, end;
+	
 	double cpu_time_used;
 	int userID = 0;
 	int column = 0;
@@ -315,15 +342,13 @@ void runMultiThreadSimulation()
 	int maxReservation = 0 ;
 	initialize_Seat(); // Reset Seat 
 
-
 	countComplete = 0;
 	countInComplete = 0;
-
 	FILE *pReadFile = NULL;
 	printf("Enter filename: ");
-	//fgets(input,sizeof(input),stdin);
-	//sscanf(input,"%s",fileName);
-	pReadFile = fopen("simulation3.txt","r");
+	fgets(input,sizeof(input),stdin);
+	sscanf(input,"%s",fileName);
+	pReadFile = fopen(fileName,"r");
 	if (pReadFile == NULL)
 	{
 	    printf("Error reading %s file!\n",fileName);
@@ -348,88 +373,166 @@ void runMultiThreadSimulation()
 		}
 		// SIMULATION START
 		pthread_t p1,p2,p3,p4;
-
+		int rc=pthread_mutex_init(&lock,NULL);
+		assert(rc == 0);
 		sumID = 0;
 		start = clock();  // Start timer 
-		printf("Loading"); 
 		for ( i = 0 ; i < maxReservation ; i = i + 4 )
 		{
+			printf(">");
 			char inputThread[25];
 			char inputThread2[25];
 			char inputThread3[25];
 			char inputThread4[25];
-			sprintf(inputThread, "%d:%d:%d",reservation[i].userID, reservation[i].row, reservation[i].column);
-			sprintf(inputThread2, "%d:%d:%d",reservation[i+1].userID, reservation[i+1].row, reservation[i+1].column);
-			sprintf(inputThread3, "%d:%d:%d",reservation[i+2].userID, reservation[i+2].row, reservation[i+2].column);
-			sprintf(inputThread4, "%d:%d:%d",reservation[i+3].userID, reservation[i+3].row, reservation[i+3].column);
-			pthread_create(&p1,NULL,mythread,inputThread);
-			pthread_create(&p2,NULL,mythread,inputThread2);
-			pthread_create(&p3,NULL,mythread,inputThread3);
-			pthread_create(&p4,NULL,mythread,inputThread4);
-			pthread_join(p1,NULL);
-			pthread_join(p2,NULL);
-			pthread_join(p3,NULL);
-			pthread_join(p4,NULL);
-			// isSuccess = reservationSeat(reservation[i].userID,reservation[i].row,reservation[i].column);
-			// if (isSuccess == 1) // Reservation Complete 
-			// {
-			// 	reservation[i].isComplete = 1;
-			// 	countComplete = countComplete + 1;
-			// }
-			// else
-			// {
-			// 	reservation[i].isComplete = 0;
-			// 	countInComplete = countInComplete + 1;
-			// }
 
+			sprintf(inputThread, "%d:%d:%d:1",reservation[i].userID, reservation[i].row, reservation[i].column);
+			if (i < maxReservation-1)
+				sprintf(inputThread2, "%d:%d:%d:2",reservation[i+1].userID, reservation[i+1].row, reservation[i+1].column);
+			if (i < maxReservation-2)
+				sprintf(inputThread3, "%d:%d:%d:3",reservation[i+2].userID, reservation[i+2].row, reservation[i+2].column);
+			if (i < maxReservation-3)
+				sprintf(inputThread4, "%d:%d:%d:4",reservation[i+3].userID, reservation[i+3].row, reservation[i+3].column);	
+
+			pthread_create(&p1,NULL,mythread,inputThread);
+			if (i < maxReservation-1)
+				pthread_create(&p2,NULL,mythread,inputThread2);
+			if (i < maxReservation-2)
+				pthread_create(&p3,NULL,mythread,inputThread3);
+			if (i < maxReservation-3)
+				pthread_create(&p4,NULL,mythread,inputThread4);	
+
+			pthread_join(p1,NULL);
+			if (i < maxReservation-1)
+				pthread_join(p2,NULL);
+			if (i < maxReservation-2)
+				pthread_join(p3,NULL);
+			if (i < maxReservation-3)
+				pthread_join(p4,NULL);
+
+			printf("\t");
 		}
 	    end = clock(); // Stop timer  
 	    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-	    printf("\nSimulation time use:%.5lf Second\n",cpu_time_used);
-		//printSeat();
-		
-		
-		for (i=0;i<MAXSEAT_ROW;i++)
-		{
-			for (int j=0;j<MAXSEAT_COLUMN;j++)
-			{
-				if (seat[i][j] != 0)
-				{
-					//sumID = sumID + seat[i][j];
-					//printf("%d ",seat[i][j]);
-				}
-			}
-		}
-		printf("\nReservation complete:%d\n",countComplete);
-		printf("Sum-RervationID %d\n",sumID);
-		printf("Cannot Reservation:%d\n",countInComplete);
+	    
+	    printf("\n--------------------------- Reservation Result ----------------------------\n");
+		printf("Reservation Accept:%3d. Reservation Reject:%3d\n",countComplete,countInComplete);
+		printf("Time usage: %.5lf Second\n",cpu_time_used);
+		printf("Sum_ID %d\n",sumID);
+		printf("Error %d\n",(maxReservation - countComplete - countInComplete));
 
 	}
 	fclose(pReadFile);
 }
 
-
-// ---------------------------------------------------------------------------
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>   TEST SIMULATION   <<<<<<<<<<<<<<<<<<<<<<<<<<<
-// ---------------------------------------------------------------------------
-void testSimulation()
+void runMultiLockThreadSimulation()
 {
 	printf("---------------------------------------------------------------------------\n");
-	printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>   TEST SIMULATION   <<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+	printf(">>>>>>>>>>>>>>>>>>>   runMultiThreadSimulation (LOCK)   <<<<<<<<<<<<<<<<<<<\n");
 	printf("---------------------------------------------------------------------------\n");
+	char input[MAXCHAR];
+	char fileName[MAXCHAR];
+
+	clock_t start, end;
+	
+	double cpu_time_used;
+	int userID = 0;
+	int column = 0;
+	int row = 0;
+	int time = 0;
+
+	int i = 0;
+	int maxReservation = 0 ;
+	initialize_Seat(); // Reset Seat 
+
+	countComplete = 0;
+	countInComplete = 0;
+	FILE *pReadFile = NULL;
+	printf("Enter filename: ");
+	fgets(input,sizeof(input),stdin);
+	sscanf(input,"%s",fileName);
+	pReadFile = fopen(fileName,"r");
+	if (pReadFile == NULL)
+	{
+	    printf("Error reading %s file!\n",fileName);
+	    exit(1);
+	}
+	else
+	{
+		// READ FILE PART 
+		fgets(input,sizeof(input),pReadFile);
+		sscanf(input,"%d",&maxReservation);
+		printf("Total Incoming event:%d\n",maxReservation);
+		RESERVATION_T reservation[maxReservation];
+		while (fgets(input,sizeof(input),pReadFile) !=  NULL )
+		{
+			sscanf(input,"%d:%d:%d:%d", &userID, &column, &row, &time);
+			reservation[i].userID = userID;
+			reservation[i].time = time;
+			reservation[i].column = column; 
+			reservation[i].row = row;
+			//printf("%d, %d, %d, %d\n",reservation[i].userID,reservation[i].column,reservation[i].row,reservation[i].time);
+			i = i + 1;
+		}
+		// SIMULATION START
+		pthread_t p1,p2,p3,p4;
+		int rc=pthread_mutex_init(&lock,NULL);
+		assert(rc == 0);
+
+
+		sumID = 0;
+		start = clock();  // Start timer 
+		for ( i = 0 ; i < maxReservation ; i = i + 4 )
+		{
+			printf(">");
+			char inputThread[25];
+			char inputThread2[25];
+			char inputThread3[25];
+			char inputThread4[25];
+			
+			sprintf(inputThread, "%d:%d:%d:1",reservation[i].userID, reservation[i].row, reservation[i].column);
+			if (i < maxReservation-1)
+				sprintf(inputThread2, "%d:%d:%d:2",reservation[i+1].userID, reservation[i+1].row, reservation[i+1].column);
+			if (i < maxReservation-2)
+				sprintf(inputThread3, "%d:%d:%d:3",reservation[i+2].userID, reservation[i+2].row, reservation[i+2].column);
+			if (i < maxReservation-3)
+				sprintf(inputThread4, "%d:%d:%d:4",reservation[i+3].userID, reservation[i+3].row, reservation[i+3].column);	
+
+			pthread_create(&p1,NULL,mythreadlock,inputThread);
+			if (i < maxReservation-1)
+				pthread_create(&p2,NULL,mythreadlock,inputThread2);
+			if (i < maxReservation-2)
+				pthread_create(&p3,NULL,mythreadlock,inputThread3);
+			if (i < maxReservation-3)
+				pthread_create(&p4,NULL,mythreadlock,inputThread4);	
+
+			pthread_join(p1,NULL);
+			if (i < maxReservation-1)
+				pthread_join(p2,NULL);
+			if (i < maxReservation-2)
+				pthread_join(p3,NULL);
+			if (i < maxReservation-3)
+				pthread_join(p4,NULL);
+
+			printf("\t");
+		}
+	    end = clock(); // Stop timer  
+	    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+	    
+	    printf("\n--------------------------- Reservation Result ----------------------------\n");
+		printf("Reservation Accept:%3d. Reservation Reject:%3d\n",countComplete,countInComplete);
+		printf("Time usage: %.5lf Second\n",cpu_time_used);
+		printf("Sum_ID %d\n",sumID);
+		printf("Error %d\n",(maxReservation - countComplete - countInComplete));
+
+	}
+	fclose(pReadFile);
 }
-
-
-
 
 // ---------------------------------------------------------------------------
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   MAIN   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // ---------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-
-
-
 	char input[64];
 	int userChoice = 0; 
 	initialize_Seat();
@@ -437,8 +540,8 @@ int main(int argc, char *argv[])
 	printf("---------------------------------------------------------------------------\n");
 	printf(">>>>>>>>>>>>>>>>>>>  Online-Movie-Reservation System   <<<<<<<<<<<<<<<<<<<<");
 	do {
-		printf("\n---------------------------------------------------------------------------\n");
-		printf("1:Run (1 Thread) 2:Run (Multi Thread) 3:Create file4:Print 0:Exit\nInput number : ");
+		printf("---------------------------------------------------------------------------\n");
+		printf("1:Run Thread\n2:Run Multi Thread\n3:Run Multi Thread LOCK\n4:Create file\n5:Print\n0:Exit\nInput number : ");
 		fgets(input,sizeof(input),stdin);
 	 	sscanf(input,"%d",&userChoice);	
 	 	if (userChoice == 1)
@@ -446,10 +549,12 @@ int main(int argc, char *argv[])
 	 	else if (userChoice == 2)
 	 		runMultiThreadSimulation();
 	 	else if (userChoice == 3)
-	 		generateFile();
+	 		runMultiLockThreadSimulation();
 	 	else if (userChoice == 4)
+	 		generateFile();
+	 	else if (userChoice == 5)
 	 		printSeat();
-	 	else if (userChoice > 4)
+	 	else if (userChoice > 5)
 	 		printf("Enter wrong choice Please enter it again.\n");
 	 	else
 	 		printf("End program Thankyou! Goodbye!\n");
