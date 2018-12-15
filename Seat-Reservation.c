@@ -201,7 +201,169 @@ void *mythread(void *arg)
 }
 
 
-void simulation()
+// Deadlock problem not fix
+void simulationDeadlock()
+{
+	char input[MAXCHAR];
+	
+	int seat = 0;
+	int index = 0;
+
+	int userAChoice[5],userBChoice[5];
+
+	int numberOfUserAChoice = 0,numberOfUserBChoice = 0;
+
+
+	int isSelect1,isSelect2,isSelect3,isSelect4,isSelect5;
+	char inputA[25],inputB[25];
+
+	// Reset value before running simulation function 
+	for (index = 0 ; index < 5 ; index++) 
+	{
+		userAChoice[index]=0;
+		userBChoice[index]=0;
+	}
+	seat1=0;
+	seat2=0;
+	seat3=0;
+	seat4=0;
+	seat5=0;
+
+	/*
+	int choice = 0;
+	printf("Show Program instuction? (1:Yes | 0:No): \n");
+	fgets(input,sizeof(input),stdin);
+	sscanf(input,"%d",&choice);
+	if (choice == 1 ) // Show program instuction 
+		programInstuction();
+	*/
+	// Ask user A for input seat 
+	index = 0;
+	isSelect1 = 0;
+	isSelect2 = 0;
+ 	isSelect3 = 0;
+	isSelect4 = 0;
+	isSelect5 = 0;
+	printf("Input Seat for user A\n");
+	do{
+		printf("Seat number :");
+		memset(input,0,sizeof(input));
+		fgets(input,sizeof(input),stdin);
+		sscanf(input,"%d",&seat);
+		if ( ((seat < 1 ||  seat > 5) && seat != -1) || (seat == 1 && isSelect1 == 1) || (seat == 2 && isSelect2 == 1) || (seat == 3 && isSelect3 == 1) ||(seat == 4 && isSelect4 == 1) || (seat == 5 && isSelect5 == 1) )
+		{
+
+			printf("Invalid or Exist number try again -> ");
+		}
+		else
+		{	
+			userAChoice[index] = seat;
+			index = index + 1;
+			// For set exist seat not allow to select again 
+			if (seat == 1)
+				isSelect1 = 1;
+			if (seat == 2)
+				isSelect2 = 1;
+			if (seat == 3)
+				isSelect3 = 1;
+			if (seat == 4)
+				isSelect4 = 1;
+			if (seat == 5)
+				isSelect5 = 1;
+			if (index >= 5)
+				break;
+		}	
+	}while(seat != -1);
+	numberOfUserAChoice = index;
+
+
+	// Ask user B for input seat 
+	index = 0;
+	isSelect1 = 0;
+	isSelect2 = 0;
+ 	isSelect3 = 0;
+	isSelect4 = 0;
+	isSelect5 = 0;
+	printf("Input seat for user B\n");
+	do{
+		printf("Seat number :");
+		memset(input,0,sizeof(input));
+		fgets(input,sizeof(input),stdin);
+		sscanf(input,"%d",&seat);
+		if ( ((seat < 1 ||  seat > 5) && seat != -1)  || (seat == 1 && isSelect1 == 1) || (seat == 2 && isSelect2 == 1) || (seat == 3 && isSelect3 == 1) ||(seat == 4 && isSelect4 == 1) || (seat == 5 && isSelect5 == 1) )
+		{
+			printf("Invalid or Exist number try again -> ");
+		}
+		else
+		{
+			userBChoice[index] = seat;
+			index = index + 1;
+			// For set exist seat not allow to select again 
+			if (seat == 1)
+				isSelect1 = 1;
+			if (seat == 2)
+				isSelect2 = 1;
+			if (seat == 3)
+				isSelect3 = 1;
+			if (seat == 4)
+				isSelect4 = 1;
+			if (seat == 5)
+				isSelect5 = 1;
+			if (index >= 5)
+				break;
+		}
+	}while(seat != -1);
+	numberOfUserBChoice = index;
+
+
+	// Show UserA & UserB reservation overall 
+	printf("User A select seat: ");
+	for (index = 0 ; index < 5 ; index++){
+		if (userAChoice[index] == -1 )
+			break;	
+		printf(" %d ",userAChoice[index]);
+	}
+	printf("\nUser B select seat: ");
+	for (index = 0 ; index < 5 ; index++){
+		if (userBChoice[index] == -1 )
+			break;
+		printf(" %d ",userBChoice[index]);
+	}
+	printf("\n");
+
+
+	// Start Multi thread
+	pthread_t p1,p2;
+	int rc = pthread_mutex_init(&lock,NULL);
+	assert(rc == 0);
+
+
+	// Running 
+	sprintf(inputA, "%d:%d:%d:%d:%d:%d:A",numberOfUserAChoice,userAChoice[0],userAChoice[1],userAChoice[2],userAChoice[3],userAChoice[4]);
+	sprintf(inputB, "%d:%d:%d:%d:%d:%d:B",numberOfUserBChoice,userBChoice[0],userBChoice[1],userBChoice[2],userBChoice[3],userBChoice[4]);
+	// B Priority Create thread b first 
+	pthread_create(&p2,NULL,mythread,inputB);
+	pthread_create(&p1,NULL,mythread,inputA);
+	pthread_join(p2,NULL);
+	pthread_join(p1,NULL);
+
+	
+
+	// Print seat 
+	printSeat();
+	
+	// Running 
+	// sprintf(inputA, "%d:%d:%d:%d:%d:%d:A",numberOfUserAChoice,userAChoice[0],userAChoice[1],userAChoice[2],userAChoice[3],userAChoice[4]);
+	// sprintf(inputB, "%d:%d:%d:%d:%d:%d:B",numberOfUserBChoice,userBChoice[0],userBChoice[1],userBChoice[2],userBChoice[3],userBChoice[4]);
+	// pthread_create(&p1,NULL,mythread,inputA);
+	// pthread_create(&p2,NULL,mythread,inputB);
+	// pthread_join(p1,NULL);
+	// pthread_join(p2,NULL);
+}
+
+
+// Deadlock problem fix
+void simulationNoDeadlock()
 {
 	char input[MAXCHAR];
 	
@@ -473,15 +635,20 @@ int main(int argc, char *argv[])
 	printf(">>>>>>>>>>>>>>>>>>>  Online-Movie-Reservation System   <<<<<<<<<<<<<<<<<<<<\n");
 	do {
 		printf("---------------------------------------------------------------------------\n");
-		printf("1:Simulation | 2:Print Seat | 0:Exit\nInput number : ");
+		printf("1:Simulation(DeadLock) | 2:Simulation(No Deadlock) | 0:Exit\nInput number : ");
 		memset(input,-1,sizeof(input));
 		userChoice = -1;
 		fgets(input,sizeof(input),stdin);
 	 	sscanf(input,"%d",&userChoice);	
 	 	if (userChoice == 1)
-	 		simulation();
-	 	else if (userChoice == 2)
-	 		printSeat();
+	 	{
+	 		printf("Deadlock situation + individual reservation seat\n");
+	 		simulationDeadlock();
+	 	}
+	 	else if (userChoice == 2){
+	 		printf("Deadlock Prevention no Deadlock\n");
+	 		simulationNoDeadlock();
+	 	}
 	 	else if (userChoice > 2 || userChoice < 0)
 	 		printf("Enter wrong choice Please enter it again.\n");
 	 	else
