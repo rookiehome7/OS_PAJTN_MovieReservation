@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
 	initialize_Seat();
 	srand(time(NULL));   // Initialization, should only be called once.
 	printf("---------------------------------------------------------------------------\n");
-	printf(">>>>>>>>>>>>>>>>>>>  Online-Movie-Reservation System   <<<<<<<<<<<<<<<<<<<<");
+	printf(">>>>>>>>>>>>>>>>>>>  Online-Movie-Reservation System   <<<<<<<<<<<<<<<<<<<<\n");
 	do {
 		printf("---------------------------------------------------------------------------\n");
 		printf("1:Run Thread\n2:Run Multi Thread\n3:Run Multi Thread LOCK\n4:Create file\n5:Print\n0:Exit\nInput number : ");
