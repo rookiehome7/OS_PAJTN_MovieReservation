@@ -59,10 +59,10 @@ void printSeat()
 void programInstuction()
 {
 	printf("This is Program instuction\n");
-	printf("In this program we have only 5 seat: number ( 1 2 3 4 5 )\n");
-	printf("In simulation we will have 2 user (User A and User B)\n");
+	printf("In this program, we have only 5 seats: number ( 1 2 3 4 5 )\n");
+	printf("In the simulation, we will have 2 users (User A and User B)\n");
 	printf("Each User need to input seat reservation consequently (Type -1 to finish)\n");
-	printf("Please do not select same seat \n");
+	printf("Please do not select the same seat.\n");
 }
 
 
@@ -113,37 +113,37 @@ void reservationSeat(int seatNumber,char name[5])
 	if (seatNumber == 1){
 		if ( seat1 == 0) // Reservation 
 		{
-			printf("%s:Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Reserved Seat %d\n",name,seatNumber);
 			seat1 = 1;
 		}
 		else
 		{
-			printf("%s:Cannot Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Cannot Reserve Seat %d\n",name,seatNumber);
 		}
 		sem_post(&seat_Sem1);
 	}
 	else if(seatNumber == 2){
 		if ( seat2 == 0) // Reservation 
 		{
-			printf("%s:Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Reserved Seat %d\n",name,seatNumber);
 			seat2 = 1;
 			
 		}
 		else
 		{
-			printf("%s:Cannot Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Cannot Reserve Seat %d\n",name,seatNumber);
 		}
 		sem_post(&seat_Sem2);
 	}
 	else if (seatNumber == 3){
 		if ( seat3 == 0) // Reservation 
 		{
-			printf("%s:Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Reserved Seat %d\n",name,seatNumber);
 			seat3 = 1;
 		}
 		else
 		{
-			printf("%s:Cannot Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Cannot Reserve Seat %d\n",name,seatNumber);
 		}
 		sem_post(&seat_Sem3);
 
@@ -151,25 +151,25 @@ void reservationSeat(int seatNumber,char name[5])
 	else if (seatNumber == 4 ){
 		if ( seat4 == 0) // Reservation 
 		{
-			printf("%s:Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Reserved Seat %d\n",name,seatNumber);
 			seat4 = 1;
 			
 		}
 		else
 		{
-			printf("%s:Cannot Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Cannot Reserve Seat %d\n",name,seatNumber);
 		}
 		sem_post(&seat_Sem4);
 	}
 	else if (seatNumber == 5){
 		if ( seat5 == 0) // Reservation 
 		{
-			printf("%s:Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Reserved Seat %d\n",name,seatNumber);
 			seat5 = 1;	
 		}
 		else
 		{
-			printf("%s:Cannot Reservation Seat %d\n",name,seatNumber);
+			printf("%s:Cannot Reserve Seat %d\n",name,seatNumber);
 		}
 		sem_post(&seat_Sem5);
 	}
@@ -252,7 +252,7 @@ void simulation()
 		if ( ((seat < 1 ||  seat > 5) && seat != -1) || (seat == 1 && isSelect1 == 1) || (seat == 2 && isSelect2 == 1) || (seat == 3 && isSelect3 == 1) ||(seat == 4 && isSelect4 == 1) || (seat == 5 && isSelect5 == 1) )
 		{
 
-			printf("Invalid or Exist number try again -> ");
+			printf("Invalid or Existed number. Try again -> ");
 		}
 		else
 		{	
@@ -274,7 +274,7 @@ void simulation()
 		}	
 	}while(seat != -1);
 	numberOfUserAChoice = index;
-	printf("User A Reservation time(Less come first)(more than 0):");
+	printf("User A's Reservation time (Less come first)(more than 0):");
 	do{
 	fgets(input,sizeof(input),stdin);
 	sscanf(input,"%d",&userATime);
@@ -296,7 +296,7 @@ void simulation()
 		sscanf(input,"%d",&seat);
 		if ( ((seat < 1 ||  seat > 5) && seat != -1)  || (seat == 1 && isSelect1 == 1) || (seat == 2 && isSelect2 == 1) || (seat == 3 && isSelect3 == 1) ||(seat == 4 && isSelect4 == 1) || (seat == 5 && isSelect5 == 1) )
 		{
-			printf("Invalid or Exist number try again -> ");
+			printf("Invalid or Existed number. Try again -> ");
 		}
 		else
 		{
@@ -318,7 +318,7 @@ void simulation()
 		}
 	}while(seat != -1);
 	numberOfUserBChoice = index;
-	printf("User B Reservation time(Less come first)(more than 0):");
+	printf("User B's Reservation time (Less come first)(more than 0):");
 	do{
 	fgets(input,sizeof(input),stdin);
 	sscanf(input,"%d",&userBTime);
@@ -382,7 +382,7 @@ void simulation()
 		sprintf(inputA, "%d:%d:%d:%d:%d:%d:A",numberOfUserAChoice,userAChoice[0],userAChoice[1],userAChoice[2],userAChoice[3],userAChoice[4]);
 		pthread_create(&p1,NULL,mythread,inputA);
 		pthread_join(p1,NULL);
-		printf("\nFOUND SAME REJECT B ---- B Cannot reservation need to select seat again\n");
+		printf("\nFOUND SAME. REJECT. B ---- B Cannot reserve. Select the seat again.\n");
 		}
 		else
 		{
@@ -425,7 +425,7 @@ void simulation()
 		sprintf(inputB, "%d:%d:%d:%d:%d:%d:B",numberOfUserBChoice,userBChoice[0],userBChoice[1],userBChoice[2],userBChoice[3],userBChoice[4]);
 		pthread_create(&p2,NULL,mythread,inputB);
 		pthread_join(p2,NULL);
-		printf("\nFOUND SAME REJECT A ---- A Cannot reservation need to select seat again\n");
+		printf("\nFOUND SAME. REJECT. A ---- A Cannot reserve. Select the seat again\n");
 		}
 		else
 		{
@@ -483,9 +483,9 @@ int main(int argc, char *argv[])
 	 	else if (userChoice == 2)
 	 		printSeat();
 	 	else if (userChoice > 2 || userChoice < 0)
-	 		printf("Enter wrong choice Please enter it again.\n");
+	 		printf("Invalid choice. Please enter it again.\n");
 	 	else
-	 		printf("End program Thankyou! Goodbye!\n");
+	 		printf("End program. Thankyou! Goodbye!\n");
 	} while(userChoice != 0);
 	return 0;
 }
